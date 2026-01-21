@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container form-page-container">
+  <h1 class="mb-4">Notification History</h1>
+
+  {% if notifications.items %}
+    <ul class="list-group list-group-flush">
+      {% for notification in notifications.items %}
+        <li class="list-group-item d-flex flex-column gap-2">
+          {% set data = notification.get_data() %}
+          {% if notification.name == 'status_update' %}
+            <div>
+              The status of your issue
+              <a href="{{ url_for('main.view_issue', issue_id=data.issue_id) }}" class="text-decoration-none">
+                "{{ data.issue_category }}"
+              </a>
+              was updated to <strong>{{ data.status }}</strong>.
+            </div>
+            <small class="text-muted">{{ notification.timestamp | strftime }}</small>
+          {% else %}
+            <div>You have a new notification.</div>
+            <small class="text-muted">{{ notification.timestamp | strftime }}</small>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-muted mt-3">No notifications available.</p>
+  {% endif %}
+
+  {% if notifications.pages > 1 %}
+    {% with pagination=notifications, endpoint='main.notification_history' %}
+      {% include '_pagination.html' %}
+    {% endwith %}
+  {% endif %}
+</div>
+{% endblock %}

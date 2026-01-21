@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container form-page-container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h1 class="card-title text-center mb-4 fs-3">Setup Two-Factor Authentication</h1>
+                    <p class="text-center mb-4">Scan the QR code with your authenticator app (e.g., Google
+                        Authenticator, Authy).</p>
+                    <div class="text-center mb-4">
+                        <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code" class="img-fluid">
+                    </div>
+                    <p class="text-center mb-4">Or manually enter this code: <code>{{ secret }}</code></p>
+                    <form action="" method="post" novalidate>
+                        <div class="mb-3">
+                            <label for="token" class="form-label">Enter the 6-digit code from your app:</label>
+                            <input type="text" class="form-control" id="token" name="token" required maxlength="6"
+                                pattern="[0-9]{6}">
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Enable 2FA</button>
+                        </div>
+                    </form>
+                    <p class="text-center mt-3">
+                        <a href="{{ url_for('main.index') }}">Skip for now</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

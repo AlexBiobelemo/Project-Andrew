@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container form-page-container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h1 class="card-title text-center mb-4 fs-3">Two-Factor Authentication</h1>
+                    <p class="text-center mb-4">Enter the 6-digit code from your authenticator app.</p>
+                    <form action="" method="post" novalidate>
+                        <div class="mb-3">
+                            <label for="token" class="form-label">6-digit code:</label>
+                            <input type="text" class="form-control" id="token" name="token" required maxlength="6"
+                                pattern="[0-9]{6}" autofocus>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Verify</button>
+                        </div>
+                    </form>
+                    <p class="text-center mt-3">
+                        <a href="{{ url_for('main.logout') }}">Logout</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

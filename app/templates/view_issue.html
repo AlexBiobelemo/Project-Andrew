@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container form-page-container">
+  <div class="row">
+    <!-- Issue Details -->
+    <div class="col-md-8">
+      <header class="mb-4">
+        <h1 class="fs-3">{{ issue.category | e }}</h1>
+        <p class="text-muted">
+          Reported by <a href="{{ url_for('main.user_profile', username=issue.reporter.username) }}"
+            class="text-muted text-decoration-none">
+            {{ issue.reporter.username | e }}
+          </a> on {{ issue.timestamp | strftime('%Y-%m-%d') }}
+        </p>
+      </header>
+      <p>{{ issue.description | e }}</p>
+
+      {% if issue.image_filename %}
+      <figure class="my-3">
+        <img src="{{ url_for('main.uploaded_file', filename=issue.image_filename) }}" class="img-fluid rounded"
+          alt="Issue image for {{ issue.category | e }}">
+      </figure>
+      {% endif %}
+
+      <hr>
+
+      <!-- Comments Section -->
+      <section class="mb-4">
+        <h2 class="fs-4 mb-3">Comments</h2>
+        {% if comments %}
+        {% for comment in comments %}
+        <div class="card mb-2 shadow-sm">
+          <div class="card-body">
+            <p class="mb-2">{{ comment.body | e }}</p>
+            <small class="text-muted">
+              By <a href="{{ url_for('main.user_profile', username=comment.author.username) }}"
+                class="text-muted text-decoration-none">
+                {{ comment.author.username | e }}
+              </a> on {{ comment.timestamp | strftime('%Y-%m-%d') }}
+            </small>
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="text-muted">No comments yet.</p>
+        {% endif %}
+      </section>
+
+      <hr>
+
+      <!-- Add Comment Form -->
+      <section>
+        <h2 class="fs-4 mb-3">Add Your Comment</h2>
+        <form action="" method="post" novalidate>
+          {{ form.hidden_tag() }}
+          <div class="mb-3">
+            {{ form.body.label(class="form-label", hidden=True) }}
+            {{ form.body(class="form-control", rows=3, required=True, placeholder="Enter your comment",
+            autocomplete="off") }}
+            {% for error in form.body.errors %}
+            <div class="invalid-feedback d-block">{{ error }}</div>
+            {% endfor %}
+          </div>
+          {{ form.submit(class="btn btn-primary") }}
+        </form>
+      </section>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-md-4">
+      <div id="issue-map" class="mb-3 rounded" style="height: 200px;" data-lat="{{ issue.latitude }}"
+        data-lng="{{ issue.longitude }}"></div>
+      <p><strong>Upvotes:</strong> {{ issue.upvote_count }}</p>
+      <p><strong>Status:</strong> <span class="badge bg-info">{{ issue.status }}</span></p>
+
+      {% if current_user.is_moderator %}
+      <div class="card mt-4 shadow-sm">
+        <div class="card-header">Moderator Actions</div>
+        <div class="card-body">
+          <form action="{{ url_for('main.update_status', issue_id=issue.id) }}" method="post">
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+              <label for="status" class="form-label">Update Status</label>
+              <select name="status" id="status" class="form-select" required>
+                {% for status in ['Reported', 'In Progress', 'Resolved'] %}
+                <option value="{{ status }}" {% if issue.status==status %}selected{% endif %}>{{ status }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Update</button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

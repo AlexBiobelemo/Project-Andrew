@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container form-page-container">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h1 class="card-title text-center mb-4 fs-3">Register</h1>
+          <form action="" method="post" novalidate id="registerForm">
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+              {{ form.username.label(class="form-label") }}
+              {{ form.username(class="form-control", size=32, required=True, autofocus=True, autocomplete="username", id="username") }}
+              <div class="invalid-feedback" id="username-feedback"></div>
+              {% for error in form.username.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="mb-3">
+              {{ form.email.label(class="form-label") }}
+              {{ form.email(class="form-control", size=32, required=True, type="email", autocomplete="email", id="email") }}
+              <div class="invalid-feedback" id="email-feedback"></div>
+              {% for error in form.email.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="mb-3">
+              {{ form.password.label(class="form-label") }}
+              <div class="input-group">
+                {{ form.password(class="form-control", size=32, required=True, autocomplete="new-password", id="password") }}
+                <button class="btn btn-outline-secondary" type="button" id="toggle-password" aria-label="Show password">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+              <div class="password-strength-container mt-2">
+                <div class="password-strength-bar">
+                  <div class="password-strength-fill" id="password-strength-fill"></div>
+                </div>
+                <small class="password-strength-text text-muted" id="password-strength-text">Password strength</small>
+              </div>
+              <ul class="password-checklist list-unstyled small mt-2" id="password-checklist">
+                <li id="req-length" class="text-muted"><i class="bi bi-x-circle me-1"></i> At least 8 characters</li>
+                <li id="req-lower" class="text-muted"><i class="bi bi-x-circle me-1"></i> Contains a lowercase letter</li>
+                <li id="req-upper" class="text-muted"><i class="bi bi-x-circle me-1"></i> Contains an uppercase letter</li>
+                <li id="req-number" class="text-muted"><i class="bi bi-x-circle me-1"></i> Contains a number</li>
+                <li id="req-special" class="text-muted"><i class="bi bi-x-circle me-1"></i> Contains a special character</li>
+              </ul>
+              <div class="invalid-feedback" id="password-feedback"></div>
+              {% for error in form.password.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="mb-3">
+              {{ form.password2.label(class="form-label") }}
+              <div class="input-group">
+                {{ form.password2(class="form-control", size=32, required=True, autocomplete="new-password", id="password2") }}
+                <button class="btn btn-outline-secondary" type="button" id="toggle-password2" aria-label="Show password">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+              <div class="invalid-feedback" id="password2-feedback"></div>
+              {% for error in form.password2.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="mb-3 form-check">
+              {{ form.data_processing_consent(class="form-check-input", id="data_processing_consent") }}
+              {{ form.data_processing_consent.label(class="form-check-label") }}
+              <div class="invalid-feedback" id="data_processing_consent-feedback"></div>
+              {% for error in form.data_processing_consent.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="mb-3 form-check">
+              {{ form.marketing_consent(class="form-check-input", id="marketing_consent") }}
+              {{ form.marketing_consent.label(class="form-check-label") }}
+            </div>
+            <div class="d-grid">
+              {{ form.submit(class="btn btn-primary", id="submit-btn") }}
+            </div>
+          </form>
+          <p class="text-center mt-3">
+            Already have an account? <a href="{{ url_for('main.login') }}">Sign in here</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Password strength checker
+  function checkPasswordStrength(password) {
+    const lengthOk = password.length >= 8;
+    const lowerOk = /[a-z]/.test(password);
+    const upperOk = /[A-Z]/.test(password);
+    const numberOk = /\d/.test(password);
+    const specialOk = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    const checks = { lengthOk, lowerOk, upperOk, numberOk, specialOk };
+    const passed = Object.values(checks).filter(Boolean).length;
+    const strength = (passed / 5) * 100;
+
+    const feedback = [];
+    if (!lengthOk) feedback.push("At least 8 characters");
+    if (!lowerOk) feedback.push("Lowercase letter");
+    if (!upperOk) feedback.push("Uppercase letter");
+    if (!numberOk) feedback.push("Number");
+    if (!specialOk) feedback.push("Special character");
+
+    return { strength, feedback, checks };
+  }
+
+  // Update password strength display
+  function updatePasswordStrength() {
+    const passwordInput = document.getElementById('password');
+    if (!passwordInput) return;
+    const password = passwordInput.value || '';
+    const strengthFill = document.getElementById('password-strength-fill');
+    const strengthText = document.getElementById('password-strength-text');
+
+    const { strength, feedback, checks } = checkPasswordStrength(password);
+
+    if (strengthFill) {
+      const width = Math.max(3, Math.round(strength)); // ensure visible sliver
+      strengthFill.style.width = width + '%';
+      if (strength < 40) {
+        strengthFill.style.backgroundColor = '#dc3545';
+      } else if (strength < 80) {
+        strengthFill.style.backgroundColor = '#ffc107';
+      } else {
+        strengthFill.style.backgroundColor = '#28a745';
+      }
+    }
+
+    if (strengthText) {
+      if (strength < 40) {
+        strengthText.textContent = 'Weak password';
+      } else if (strength < 80) {
+        strengthText.textContent = 'Medium password';
+      } else {
+        strengthText.textContent = 'Strong password';
+      }
+      if (feedback.length > 0 && password.length > 0) {
+        strengthText.textContent += ' - Missing: ' + feedback.join(', ');
+      }
+    }
+
+    const setItemState = (id, ok) => {
+      const li = document.getElementById(id);
+      if (!li) return;
+      const icon = li.querySelector('i');
+      li.classList.toggle('text-success', ok);
+      li.classList.toggle('text-muted', !ok);
+      if (icon) {
+        icon.className = ok ? 'bi bi-check-circle me-1' : 'bi bi-x-circle me-1';
+      }
+    };
+
+    setItemState('req-length', checks.lengthOk);
+    setItemState('req-lower', checks.lowerOk);
+    setItemState('req-upper', checks.upperOk);
+    setItemState('req-number', checks.numberOk);
+    setItemState('req-special', checks.specialOk);
+  }
+
+  // Form validation functions
+  function validateUsername() {
+    const username = document.getElementById('username').value;
+    const feedback = document.getElementById('username-feedback');
+
+    if (username.length < 3) {
+      feedback.textContent = 'Username must be at least 3 characters long';
+      feedback.style.display = 'block';
+      return false;
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      feedback.textContent = 'Username can only contain letters, numbers, and underscores';
+      feedback.style.display = 'block';
+      return false;
+    }
+
+    feedback.style.display = 'none';
+    return true;
+  }
+
+  function validateEmail() {
+    const email = document.getElementById('email').value;
+    const feedback = document.getElementById('email-feedback');
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      feedback.textContent = 'Please enter a valid email address';
+      feedback.style.display = 'block';
+      return false;
+    }
+
+    feedback.style.display = 'none';
+    return true;
+  }
+
+  function validatePassword() {
+    const password = document.getElementById('password').value;
+    const feedback = document.getElementById('password-feedback');
+
+    const { strength } = checkPasswordStrength(password);
+
+    if (strength < 40) {
+      feedback.textContent = 'Password is too weak. Please make it stronger.';
+      feedback.style.display = 'block';
+      return false;
+    }
+
+    feedback.style.display = 'none';
+    return true;
+  }
+
+  function validatePasswordMatch() {
+    const password = document.getElementById('password').value;
+    const password2 = document.getElementById('password2').value;
+    const feedback = document.getElementById('password2-feedback');
+
+    if (password !== password2) {
+      feedback.textContent = 'Passwords do not match';
+      feedback.style.display = 'block';
+      return false;
+    }
+
+    feedback.style.display = 'none';
+    return true;
+  }
+
+  function validateConsent() {
+    const consent = document.getElementById('data_processing_consent').checked;
+    const feedback = document.getElementById('data_processing_consent-feedback');
+
+    if (!consent) {
+      feedback.textContent = 'You must consent to data processing';
+      feedback.style.display = 'block';
+      return false;
+    }
+
+    feedback.style.display = 'none';
+    return true;
+  }
+
+  // Save form data to localStorage
+  function saveFormData() {
+    const formData = {
+      username: document.getElementById('username').value,
+      email: document.getElementById('email').value,
+      marketing_consent: document.getElementById('marketing_consent').checked,
+      data_processing_consent: document.getElementById('data_processing_consent').checked
+    };
+    localStorage.setItem('registerFormData', JSON.stringify(formData));
+  }
+
+  // Restore form data from localStorage
+  function restoreFormData() {
+    const savedData = localStorage.getItem('registerFormData');
+    if (savedData) {
+      const formData = JSON.parse(savedData);
+      document.getElementById('username').value = formData.username || '';
+      document.getElementById('email').value = formData.email || '';
+      document.getElementById('marketing_consent').checked = formData.marketing_consent || false;
+      document.getElementById('data_processing_consent').checked = formData.data_processing_consent || false;
+    }
+  }
+
+  // Clear saved form data
+  function clearFormData() {
+    localStorage.removeItem('registerFormData');
+  }
+
+  // Event listeners
+  function bindRegisterEvents() {
+    // Restore form data on page load
+    restoreFormData();
+
+    // Password strength checking
+    const pw = document.getElementById('password');
+    if (pw) {
+      pw.addEventListener('input', updatePasswordStrength);
+    }
+
+    // Real-time validation
+    document.getElementById('username')?.addEventListener('blur', validateUsername);
+    document.getElementById('email')?.addEventListener('blur', validateEmail);
+    document.getElementById('password')?.addEventListener('blur', validatePassword);
+    document.getElementById('password2')?.addEventListener('blur', validatePasswordMatch);
+    document.getElementById('data_processing_consent')?.addEventListener('change', validateConsent);
+
+    // Toggle password visibility
+    const toggle = (inputId, btnId) => {
+      const input = document.getElementById(inputId);
+      const btn = document.getElementById(btnId);
+      if (!input || !btn) return;
+      btn.addEventListener('click', () => {
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        const icon = btn.querySelector('i');
+        if (icon) icon.className = isPassword ? 'bi bi-eye-slash' : 'bi bi-eye';
+        btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+      });
+    };
+    toggle('password', 'toggle-password');
+    toggle('password2', 'toggle-password2');
+
+    // Save form data on input changes
+    const inputs = ['username', 'email', 'marketing_consent', 'data_processing_consent'];
+    inputs.forEach(id => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.addEventListener('input', saveFormData);
+        element.addEventListener('change', saveFormData);
+      }
+    });
+
+    // Form submission validation and cleanup
+    const form = document.getElementById('registerForm');
+    if (form) {
+      form.addEventListener('submit', function (e) {
+        const isValid = validateUsername() && validateEmail() && validatePassword() &&
+          validatePasswordMatch() && validateConsent();
+
+        if (isValid) {
+          clearFormData();
+        } else {
+          e.preventDefault();
+        }
+      });
+    }
+
+    // Initialize password strength display
+    updatePasswordStrength();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindRegisterEvents);
+  } else {
+    // DOM already ready
+    bindRegisterEvents();
+  }
+</script>
+<style>
+  .password-strength-container {
+    margin-top: 5px;
+  }
+
+  .password-strength-bar {
+    height: 10px;
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    overflow: visible;
+    position: relative;
+  }
+
+  .password-strength-fill {
+    height: 100%;
+    width: 3%; /* ensure visible even at 0 */
+    min-width: 3px;
+    background-color: #dc3545; /* default weak color */
+    transition: width 0.3s ease, background-color 0.3s ease;
+  }
+
+  .password-checklist li {
+    line-height: 1.5;
+  }
+
+  .input-group > .form-control {
+    border-right: 0;
+  }
+  .input-group > .btn {
+    border-left: 0;
+  }
+
+  .invalid-feedback {
+    display: none;
+  }
+</style>
+{% endblock %}

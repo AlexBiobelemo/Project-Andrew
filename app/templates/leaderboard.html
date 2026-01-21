@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container form-page-container">
+  <h1>Reputation Leaderboard</h1>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Username</th>
+        <th>Reputation Points</th>
+        <th>Issues Reported</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entry in leaderboard %}
+      <tr>
+        <td>{{ entry.rank }}</td>
+        <td><a href="{{ url_for('main.user_profile', username=entry.username) }}">{{ entry.username }}</a></td>
+        <td>{{ entry.reputation_points }}</td>
+        <td>{{ entry.issues_count }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

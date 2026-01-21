@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Predictive Analytics Dashboard</h1>
+    <p class="lead">AI-powered forecasting of issue hotspots and preventive measures</p>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Predicted Hotspots</h5>
+                </div>
+                <div class="card-body">
+                    <div id="hotspots-map" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Hotspot Details</h5>
+                </div>
+                <div class="card-body">
+                    {% if hotspots %}
+                    {% for hotspot in hotspots %}
+                    <div class="mb-3 p-2 border rounded">
+                        <strong>{{ hotspot.category }}</strong><br>
+                        <small class="text-muted">Risk: {{ hotspot.risk_level }}</small><br>
+                        <small>Lat: {{ hotspot.lat }}, Lng: {{ hotspot.lng }}</small>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p>No hotspots predicted at this time.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Preventive Measures Suggestions</h5>
+                </div>
+                <div class="card-body">
+                    {% if suggestions %}
+                    <ul class="list-group">
+                        {% for suggestion in suggestions %}
+                        <li class="list-group-item">{{ suggestion }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p>No suggestions available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize map for hotspots
+    var map = L.map('hotspots-map').setView([0, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    var hotspots = {{ hotspots_json| safe}};
+    var bounds = [];
+
+    hotspots.forEach(function (hotspot) {
+        var color = hotspot.risk_level === 'High' ? 'red' : hotspot.risk_level === 'Medium' ? 'orange' : 'yellow';
+        L.circle([hotspot.lat, hotspot.lng], {
+            color: color,
+            fillColor: color,
+            fillOpacity: 0.5,
+            radius: 100
+        }).addTo(map).bindPopup('<strong>' + hotspot.category + '</strong><br>Risk: ' + hotspot.risk_level);
+
+        bounds.push([hotspot.lat, hotspot.lng]);
+    });
+
+    if (bounds.length > 0) {
+        map.fitBounds(bounds);
+    }
+</script>
+{% endblock %}

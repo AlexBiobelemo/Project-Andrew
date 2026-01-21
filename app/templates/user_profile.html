@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container form-page-container">
+  <header class="mb-4">
+    <h1 class="fs-2">{{ user.username | e }}</h1>
+    <p class="lead">Reputation Score: <span class="badge bg-primary">{{ user.reputation_points }}</span></p>
+    {% if user_badges %}
+    <p>Badges: {% for badge in user_badges %}<span class="badge bg-success">{{ badge.name }}</span> {% endfor %}</p>
+    {% endif %}
+    {% if current_user.id == user.id %}
+    <p>
+      {% if user.twofa_enabled %}
+      <span class="badge bg-success">2FA Enabled</span>
+      {% else %}
+      <a href="{{ url_for('main.setup_2fa') }}" class="btn btn-outline-primary btn-sm">Enable 2FA</a>
+      {% endif %}
+    </p>
+
+    <hr class="my-3">
+
+    <h3 class="fs-5">Privacy & GDPR</h3>
+    <p><strong>Data Processing Consent:</strong> {% if user.data_processing_consent %}Granted{% else %}Not Granted{%
+      endif %}</p>
+    <p><strong>Marketing Consent:</strong> {% if user.marketing_consent %}Granted{% else %}Not Granted{% endif %}</p>
+    {% if user.consent_date %}
+    <p><strong>Consent Date:</strong> {{ user.consent_date.strftime('%Y-%m-%d %H:%M') }}</p>
+    {% endif %}
+
+    <div class="mt-3">
+      <a href="{{ url_for('main.export_data') }}" class="btn btn-outline-info btn-sm">Export My Data</a>
+      <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal"
+        data-bs-target="#deleteModal">Delete Account</button>
+    </div>
+    {% endif %}
+  </header>
+
+  <hr>
+
+  <section class="mt-4">
+    <h2 class="fs-4 mb-3">Issues Reported by {{ user.username | e }}</h2>
+    {% if issues %}
+    <ul class="list-group list-group-flush">
+      {% for issue in issues %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <a href="{{ url_for('main.view_issue', issue_id=issue.id) }}" class="text-decoration-none">
+          {{ issue.category | e }}
+        </a>
+        <small class="text-muted">{{ issue.timestamp | strftime('%Y-%m-%d') }}</small>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-muted mt-3">No issues reported yet.</p>
+    {% endif %}
+  </section>
+</div>
+
+<!-- Delete Account Modal -->
+{% if current_user.id == user.id %}
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteModalLabel">Delete Account</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete your account? This action cannot be undone and will permanently remove all
+          your data, including issues, comments, and profile information.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form method="post" action="{{ url_for('main.delete_account') }}" style="display: inline;">
+          <button type="submit" class="btn btn-danger">Delete Account</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

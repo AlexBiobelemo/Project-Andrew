@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container form-page-container">
+    <h1>Your Challenges</h1>
+    <div class="row">
+        {% for user_challenge in challenges %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ user_challenge.challenge.name }}</h5>
+                    <p class="card-text">{{ user_challenge.challenge.description }}</p>
+                    <p>Progress: {{ user_challenge.progress }} / Required</p>
+                    {% if user_challenge.completed_at %}
+                    <span class="badge bg-success">Completed</span>
+                    {% else %}
+                    <span class="badge bg-warning">In Progress</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4 form-page-container">
+  <!-- Header Section -->
+  <header class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Community Analytics</h1>
+    <button class="btn btn-primary" id="generate-report-btn" aria-label="Generate Weekly Briefing">
+      <i class="bi bi-robot"></i> Generate Weekly Briefing
+    </button>
+  </header>
+
+  <!-- AI-Generated Report Section -->
+  <section id="report-container" class="card mb-4" style="display: none;" aria-live="polite">
+    <div class="card-header">AI-Generated Weekly Briefing</div>
+    <div class="card-body">
+      <div id="report-spinner" class="text-center" role="status" style="display: none;">
+        <div class="spinner-border">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+      <div id="report-content"></div>
+    </div>
+  </section>
+
+  <!-- Issue Hotspots Section -->
+  <section class="mt-5">
+    <h2>Issue Hotspots</h2>
+    <div id="heatmap" class="mb-4 rounded" style="height: 400px;" data-points='{{ heatmap_data | tojson }}'></div>
+  </section>
+
+  <!-- Status Overview Section -->
+  <section class="mt-5">
+    <h2>Status Overview</h2>
+    <div class="row">
+      {% for status, color in [('Reported', 'danger'), ('In Progress', 'warning'), ('Resolved', 'success')] %}
+      <div class="col-md-4">
+        <div class="card text-white bg-{{ color }} mb-3">
+          <div class="card-header">{{ status }}</div>
+          <div class="card-body">
+            <h5 class="card-title">{{ status_counts.get(status, 0) }}</h5>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Top Unresolved Issues Section -->
+  <section class="mt-5">
+    <h2>Top 5 Unresolved Issues</h2>
+    <ul class="list-group">
+      {% for issue in top_issues %}
+      <li class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+        <a href="{{ url_for('main.view_issue', issue_id=issue.id) }}" class="text-decoration-none">
+          {{ issue.category }}
+        </a>
+        <span class="badge bg-primary rounded-pill">{{ issue.upvote_count }} Upvotes</span>
+      </li>
+      {% else %}
+      <li class="list-group-item text-muted">No unresolved issues.</li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+
+<script>
+  // Utility Functions
+  const select = (id) => document.getElementById(id);
+  const showElement = (element, display = 'block') => element.style.display = display;
+  const hideElement = (element) => element.style.display = 'none';
+
+  // AI Report Generation
+  const initReportGeneration = () => {
+    const generateBtn = select('generate-report-btn');
+    const reportContainer = select('report-container');
+    const reportContent = select('report-content');
+    const reportSpinner = select('report-spinner');
+
+    generateBtn.addEventListener('click', async () => {
+      showElement(reportContainer);
+      reportContent.innerHTML = '';
+      showElement(reportSpinner);
+      generateBtn.disabled = true;
+
+      try {
+        const response = await fetch("{{ url_for('main.generate_report') }}", { method: 'POST' });
+        if (!response.ok) throw new Error('Network response was not ok');
+        const data = await response.json();
+
+        reportContent.innerHTML = data.report
+          ? marked.parse(data.report)
+          : '<p class="text-danger">Failed to generate report.</p>';
+      } catch (error) {
+        console.error('Error generating report:', error);
+        reportContent.innerHTML = '<p class="text-danger">An error occurred. Check the console for details.</p>';
+      } finally {
+        hideElement(reportSpinner);
+        generateBtn.disabled = false;
+      }
+    });
+  };
+
+  // Heatmap Initialization
+  const initHeatmap = () => {
+    const heatmapDiv = select('heatmap');
+    const points = JSON.parse(heatmapDiv.dataset.points || '[]');
+
+    if (points.length === 0) {
+      heatmapDiv.innerHTML = '<p class="text-center text-muted">No unresolved issues to display on the map.</p>';
+      return;
+    }
+
+    const map = L.map('heatmap').setView([4.9248, 6.2647], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    L.heatLayer(points, {
+      radius: 35,
+      blur: 25,
+      gradient: { 0.5: 'green', 0.7: 'yellow', 0.9: 'orange', 1.0: 'red' }
+    }).addTo(map);
+
+    points.forEach((point) => {
+      L.circle(point, {
+        radius: 20,
+        color: '#ff0000',
+        weight: 1,
+        fillColor: '#ff0000',
+        fillOpacity: 0.2
+      }).addTo(map);
+    });
+  };
+
+  // Initialize on DOM Content Loaded
+  document.addEventListener('DOMContentLoaded', () => {
+    initReportGeneration();
+    initHeatmap();
+  });
+</script>
+{% endblock %}

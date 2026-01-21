@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="map" data-issues='{{ issues_data | tojson }}'
+  data-is-authenticated='{{ current_user.is_authenticated | tojson }}' data-login-url='{{ url_for("main.login") }}'
+  data-report-issue-url='{{ url_for("main.report_issue") }}'
+  data-reverse-geocode-url='{{ url_for("main.reverse_geocode") }}'
+  data-check-duplicates-url='{{ url_for("main.check_duplicates") }}'></div>
+
+
+<!-- Report Issue Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="reportModalLabel">Report a New Issue</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="issue-form" enctype="multipart/form-data">
+          {{ issue_form.hidden_tag() }}
+          <input type="hidden" id="lat-input" name="lat">
+          <input type="hidden" id="lng-input" name="lng">
+
+          <div class="mb-3">
+            {{ issue_form.category.label(class="form-label") }}
+            {{ issue_form.category(class="form-select") }}
+          </div>
+          <div class="mb-3">
+            {{ issue_form.location_text.label(class="form-label") }}
+            {{ issue_form.location_text(class="form-control", id="location-text", readonly=True) }}
+          </div>
+          <div class="mb-3">
+            {{ issue_form.description.label(class="form-label") }}
+            <div class="input-group">
+              {{ issue_form.description(class="form-control", rows="3", id="description") }}
+              <button class="btn btn-outline-secondary" type="button" id="voice-btn">
+                <i class="bi bi-mic"></i>
+              </button>
+            </div>
+          </div>
+          <div class="mb-3">
+            {{ issue_form.photo.label(class="form-label") }}
+            {{ issue_form.photo(class="form-control") }}
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="submit-issue-btn">Submit Report</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .leaflet-control-locate a {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 34px;
+    height: 34px;
+    background-color: #fff;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+
+  .leaflet-control-locate a:hover {
+    background-color: #f4f4f4;
+  }
+
+  .leaflet-control-offline a {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 34px;
+    height: 34px;
+    background-color: #fff;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+
+  .leaflet-control-offline a:hover {
+    background-color: #f4f4f4;
+  }
+</style>
+{% endblock %}
